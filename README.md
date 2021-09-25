@@ -2,7 +2,7 @@
 
 A spotlight-equivalent for Linux.
 
-Goals:
+## Todos
 
 * [x] Arithmetic
 * [ ] Definitions
@@ -11,3 +11,24 @@ Goals:
 * [ ] arXiv / OpenReview search
 * [ ] Spotify
 * [ ] Document preview
+
+## Quickstart
+
+First install GTK dependencies:
+
+```bash
+sudo apt install python3-gi python3-gi-cairo gir1.2-gtk-3.0
+```
+
+Then install in editable mode:
+
+```bash
+git clone git@github.com:kevinzakka/spotlight.git
+cd spotlight
+pip install -e .
+```
+
+You can now run `spotlight` to launch the app.
+
+Once this is ready to launch, we'll want to have instructions for binding the
+entry point to a key stroke that way say `ctrl + space` can launch the app.

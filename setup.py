@@ -29,11 +29,5 @@ setup(
         "py-dict-client",
         "lark",
     ],
-    classifiers=[
-        "Development Status :: 3 - Alpha",
-        "License :: OSI Approved :: MIT License",
-        "Operating System :: POSIX :: Linux",
-        "Programming Language :: Python :: 3.8",
-    ],
     entry_points={"console_scripts": ["spotlight=spotlight.cli:main"]},
 )
