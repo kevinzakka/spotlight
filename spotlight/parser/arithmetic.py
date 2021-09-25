@@ -27,6 +27,7 @@ GRAMMAR = """
 
     ?atom: NUMBER                       -> number
         | "pi"                          -> pi
+        | "e"                           -> e
         | NAME "(" sum ")"              -> func
         | NAME "(" sum ("," sum)+ ")"   -> func
         |   "(" sum ")"
@@ -63,6 +64,11 @@ class ArithmeticTransformer(Transformer):
         import math
 
         return math.pi
+
+    def e(self) -> float:
+        import math
+
+        return math.e
 
     def func(self, name, *args) -> float:
         import math
