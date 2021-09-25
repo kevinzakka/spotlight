@@ -19,5 +19,5 @@ def main():
     Gtk.main()
 
 
-def handle_result(_, query_output):
-    print("hi", query_output)
+def handle_result(_, query_output_exc):
+    print("hi", query_output_exc)

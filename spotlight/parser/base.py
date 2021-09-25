@@ -2,7 +2,7 @@ import abc
 
 import time
 import threading
-from typing import Tuple
+from typing import Optional, Tuple
 
 import gi
 
@@ -38,7 +38,9 @@ class AsyncParser(GObject.Object):
         arg_types=(object,),
         accumulator=GObject.signal_accumulator_true_handled,
     )
-    def query_result(self, query_and_value: Tuple[str, str]):
+    def query_result(
+        self, query_value_exception: Tuple[str, Optional[str], Optional[Exception]]
+    ):
         pass
 
     def run_query(self, query: str):
@@ -52,13 +54,20 @@ class AsyncParser(GObject.Object):
                 if self._query is None:
                     self._cond.wait()
                 query = self._query
-            result = self.parse_sync(query)
+            try:
+                result = self.parse_sync(query)
+                exception = None
+            except Exception as exc:
+                result = None
+                exception = exc
             with self._cond:
                 # Don't trigger signal if query changed.
                 if self._query == query:
                     ev = GLib.Idle()
                     ev.set_callback(
-                        lambda *args: self.emit("query_result", (query, result))
+                        lambda *args: self.emit(
+                            "query_result", (query, result, exception)
+                        )
                     )
                     ev.attach(GLib.MainContext.default())
                     self._query = None
@@ -73,4 +82,5 @@ class SleepyParrotParser(AsyncParser):
 
     def parse_sync(self, string: str) -> str:
         time.sleep(0.1)
+        raise ValueError("hi")
         return "hello " + string
