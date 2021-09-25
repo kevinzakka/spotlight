@@ -101,12 +101,8 @@ class Spotlight(Gtk.Window):
         if self.text_entry == "":
             self.clear_text()
             return
-        else:
-            print(self.text_entry)
 
         expression = self._linker(self.text_entry)
-        print(str(expression))
-
         if expression in self._parsers:
             parser = self._parsers[expression]
         else:
@@ -121,7 +117,9 @@ class Spotlight(Gtk.Window):
 
             parser.connect("query_result", _handle_result)
 
-        parser.run_query(self.text_entry)
+        answer = parser.run_query(self.text_entry)
+        if answer is not None:
+            self._answer.set_text(answer)
 
     def style_entry(self) -> None:
         css = Gtk.CssProvider()
