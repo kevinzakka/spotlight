@@ -5,7 +5,6 @@ from typing import Dict
 import gi
 
 gi.require_version("Gtk", "3.0")
-import threading
 
 from gi.repository import Gdk, Gtk
 
