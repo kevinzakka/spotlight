@@ -1,8 +1,9 @@
 import gi
 
 gi.require_version("Gtk", "3.0")
-from gi.repository import Gtk
-from gi.repository import Gdk
+from gi.repository import Gdk, Gtk
+
+from .parser import Parser
 
 
 class Spotlight(Gtk.Window):
@@ -39,6 +40,8 @@ class Spotlight(Gtk.Window):
         self.connect("key-press-event", self.on_key_press)
         self._entry.connect("changed", self.on_entry_changed)
 
+        self.parser = Parser()
+
     def on_key_press(self, widget, event):
         ctrl = event.state & Gdk.ModifierType.CONTROL_MASK
         if event.keyval == Gdk.KEY_Escape:
@@ -55,7 +58,8 @@ class Spotlight(Gtk.Window):
         if self._entry.props.text == "":
             self.auto_shrink()
             return
-        self._answer.set_text(self._entry.props.text)
+        answer = self.parser.parse(self.text_entry)
+        self._answer.set_text(answer)
 
     def style_entry(self) -> None:
         css = Gtk.CssProvider()
@@ -87,3 +91,7 @@ class Spotlight(Gtk.Window):
         clip = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
         text = self._answer.get_text()
         clip.set_text(text, len(text))
+
+    @property
+    def text_entry(self) -> str:
+        return self._entry.props.text

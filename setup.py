@@ -27,6 +27,7 @@ setup(
         "pycairo",
         "PyGObject",
         "py-dict-client",
+        "lark",
     ],
     classifiers=[
         "Development Status :: 3 - Alpha",
