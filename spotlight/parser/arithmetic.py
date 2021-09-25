@@ -26,6 +26,7 @@ GRAMMAR = """
         | pow "^" atom   -> pow
 
     ?atom: NUMBER                       -> number
+        | "pi"                          -> pi
         | NAME "(" sum ")"              -> func
         | NAME "(" sum ("," sum)+ ")"   -> func
         |   "(" sum ")"
@@ -40,13 +41,13 @@ GRAMMAR = """
 
 @v_args(inline=True)
 class ArithmeticTransformer(Transformer):
-    from operator import add, eq, ge, gt, le, lt, mul, ne, neg, pow, sub
+    from operator import add, mul, pow, sub
     from operator import truediv as div
 
-    def number(self, x):
-        if x.isdigit():
-            return int(x)
-        return float(x)
+    # TODO(kevin): Figure out non-hacky way to return ints if the string can be
+    # coerced to one. This will make for prettier printing in the spotlight
+    # answer box.
+    number = float
 
     def __init__(self):
         self.vars = {}
@@ -57,6 +58,11 @@ class ArithmeticTransformer(Transformer):
 
     def var(self, name):
         return self.vars[name]
+
+    def pi(self) -> float:
+        import math
+
+        return math.pi
 
     def func(self, name, *args) -> float:
         import math
