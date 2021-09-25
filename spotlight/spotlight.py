@@ -9,6 +9,8 @@ from gi.repository import Gdk, Gtk
 
 from spotlight import parser
 
+import threading
+
 
 class Expression(enum.Enum):
     """The types of expressions we understand and support."""
@@ -38,6 +40,12 @@ class Linker:
                 return self.PATTERN_TO_EXPRESSION[pattern]
 
         return "Invalid expression."
+
+
+EXPRESSION_TO_PARSER = {
+    Expression.ARITHMETIC: parser.ArithmeticParser,
+    Expression.DICTIONARY_LOOKUP: parser.SleepyParrotParser,
+}
 
 
 class Spotlight(Gtk.Window):
@@ -89,25 +97,29 @@ class Spotlight(Gtk.Window):
             return False
 
     def on_entry_changed(self, event) -> None:
+        print(f"# of active threads: {threading.active_count()}")
+
         if self._entry.props.text == "":
             self.auto_shrink()
             return
 
-        expression = self._linker(self.text_entry)
         answer = ""
+        expression = self._linker(self.text_entry)
 
-        if expression == Expression.ARITHMETIC:
-            print(str(expression))
-            answer = parser.ArithmeticParser().parse(self.text_entry)
-        elif expression == Expression.DICTIONARY_LOOKUP:
-            print(str(expression))
-        elif expression == Expression.BANG_SEARCH:
-            print(str(expression))
-        else:
-            print("NOTHING GOT TRIGGERED")
-            answer = ""
-
+        # print(str(expression))
+        parser = EXPRESSION_TO_PARSER[expression]()
+        answer = parser.parse(self.text_entry)
         self._answer.set_text(answer)
+
+        thread = threading.Thread(target=self.update_on_done, args=(parser,))
+        thread.daemon = True
+        thread.start()
+
+    def update_on_done(self, parser):
+        while True:
+            if parser.ret is not None:
+                self._answer.set_text(parser.ret)
+                break
 
     def style_entry(self) -> None:
         css = Gtk.CssProvider()
