@@ -5,11 +5,11 @@ from typing import Dict
 import gi
 
 gi.require_version("Gtk", "3.0")
+import threading
+
 from gi.repository import Gdk, Gtk
 
 from spotlight import parser
-
-import threading
 
 
 class Expression(enum.Enum):
@@ -44,7 +44,7 @@ class Linker:
 
 EXPRESSION_TO_PARSER = {
     Expression.ARITHMETIC: parser.ArithmeticParser,
-    Expression.DICTIONARY_LOOKUP: parser.SleepyParrotParser,
+    Expression.DICTIONARY_LOOKUP: parser.DictClientParser,
 }
 
 
@@ -83,11 +83,12 @@ class Spotlight(Gtk.Window):
         self._entry.connect("changed", self.on_entry_changed)
 
         self._linker = Linker()
+        self._parsers: Dict[Expression, parser.AsyncParser] = {}
 
     def on_key_press(self, widget, event):
         ctrl = event.state & Gdk.ModifierType.CONTROL_MASK
         if event.keyval == Gdk.KEY_Escape:
-            if self._entry.props.text != "":
+            if self.text_entry != "":
                 self.clear_text()
             else:
                 self.close()
@@ -97,29 +98,30 @@ class Spotlight(Gtk.Window):
             return False
 
     def on_entry_changed(self, event) -> None:
-        print(f"# of active threads: {threading.active_count()}")
-
-        if self._entry.props.text == "":
-            self.auto_shrink()
+        if self.text_entry == "":
+            self.clear_text()
             return
+        else:
+            print(self.text_entry)
 
-        answer = ""
         expression = self._linker(self.text_entry)
+        print(str(expression))
 
-        # print(str(expression))
-        parser = EXPRESSION_TO_PARSER[expression]()
-        answer = parser.parse(self.text_entry)
-        self._answer.set_text(answer)
+        if expression in self._parsers:
+            parser = self._parsers[expression]
+        else:
+            parser = EXPRESSION_TO_PARSER[expression]()
+            self._parsers[expression] = parser
 
-        thread = threading.Thread(target=self.update_on_done, args=(parser,))
-        thread.daemon = True
-        thread.start()
+            def _handle_result(_, query_output_exc):
+                query, output, exc = query_output_exc
+                if query == self.text_entry and exc is None:
+                    self._answer.set_text(output)
+                    self.auto_shrink()
 
-    def update_on_done(self, parser):
-        while True:
-            if parser.ret is not None:
-                self._answer.set_text(parser.ret)
-                break
+            parser.connect("query_result", _handle_result)
+
+        parser.run_query(self.text_entry)
 
     def style_entry(self) -> None:
         css = Gtk.CssProvider()

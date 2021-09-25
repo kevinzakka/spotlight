@@ -1,28 +1,15 @@
 import abc
-
-import time
 import threading
 from typing import Optional, Tuple
 
 import gi
 
 gi.require_version("Gtk", "3.0")
-from gi.repository import GObject, GLib
-
-
-class Parser(abc.ABC):
-    """Base parser abstraction."""
-
-    def __init__(self):
-        pass
-
-    @abc.abstractmethod
-    def parse(self, string: str) -> str:
-        """Parse a string."""
+from gi.repository import GLib, GObject
 
 
 class AsyncParser(GObject.Object):
-    """Base async parser abstraction."""
+    """Base asynchronous parser abstraction."""
 
     def __init__(self):
         super().__init__()
@@ -75,12 +62,3 @@ class AsyncParser(GObject.Object):
     @abc.abstractmethod
     def parse_sync(self, string: str) -> str:
         """Parse a string."""
-
-
-class SleepyParrotParser(AsyncParser):
-    """A parser that sleeps then repeats what it was fed."""
-
-    def parse_sync(self, string: str) -> str:
-        time.sleep(0.1)
-        raise ValueError("hi")
-        return "hello " + string

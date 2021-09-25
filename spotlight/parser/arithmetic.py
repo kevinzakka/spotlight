@@ -2,7 +2,7 @@
 
 from lark import Lark, Transformer, v_args
 
-from .base import Parser
+from .base import AsyncParser
 
 ALIASES = {
     "ln": "log",
@@ -79,14 +79,16 @@ class ArithmeticTransformer(Transformer):
         return getattr(math, name)(*args)
 
 
-class ArithmeticParser(Parser):
+class ArithmeticParser(AsyncParser):
     """Performs an arithmetic parse of the input."""
 
     def __init__(self):
+        super().__init__()
+
         parser = Lark(GRAMMAR, parser="lalr", transformer=ArithmeticTransformer())
         self.parser = parser.parse
 
-    def parse(self, string: str) -> str:
+    def parse_sync(self, string: str) -> str:
         try:
             return str(self.parser(string))
         except:
