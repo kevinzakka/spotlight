@@ -1,8 +1,8 @@
-"""Evaluate arithmetic expressions."""
+"""A basic arithmetic parser."""
 
 from lark import Lark, Transformer, v_args
 
-from .base import Evaluator
+from .base import Parser
 
 ALIASES = {
     "ln": "log",
@@ -67,17 +67,15 @@ class ArithmeticTransformer(Transformer):
         return getattr(math, name)(*args)
 
 
-class ArithmeticEvaluator(Evaluator):
-    """Performs an arithmetic evaluation of the expression."""
+class ArithmeticParser(Parser):
+    """Performs an arithmetic parse of the input."""
 
     def __init__(self):
-        self.calc_parser = Lark(
-            GRAMMAR, parser="lalr", transformer=ArithmeticTransformer()
-        )
-        self.calc = self.calc_parser.parse
+        parser = Lark(GRAMMAR, parser="lalr", transformer=ArithmeticTransformer())
+        self.parser = parser.parse
 
-    def evaluate(self, expression: str) -> str:
+    def parse(self, string: str) -> str:
         try:
-            return str(self.calc(expression))
+            return str(self.parser(string))
         except:
             return ""

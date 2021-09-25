@@ -1,9 +1,43 @@
+import enum
+import re
+from typing import Dict
+
 import gi
 
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gdk, Gtk
 
-from .parser import Parser
+from spotlight import parser
+
+
+class Expression(enum.Enum):
+    """The types of expressions we understand and support."""
+
+    ARITHMETIC = "arithmetic"
+    DICTIONARY_LOOKUP = "dictionary"
+    CURRENCY_CONVERSION = "currency_conversion"
+    BANG_SEARCH = "bang_search"
+    SPOTIFY_SEARCH = "spotify_search"
+    ARXIV_SEARCH = "arxiv_search"
+    GOOGLE_SCHOLAR_SEARCH = "google_scholar_search"
+
+
+class Linker:
+    """The linker reads raw user text and links it to an Expression."""
+
+    PATTERN_TO_EXPRESSION: Dict[str, Expression] = {
+        "^[A-Za-z ]+$": Expression.DICTIONARY_LOOKUP,
+        "[0-9a-z()+\-\*/]": Expression.ARITHMETIC,
+        "^[!]": Expression.BANG_SEARCH,
+    }
+
+    def __call__(self, text: str) -> Expression:
+
+        for pattern in self.PATTERN_TO_EXPRESSION.keys():
+            if re.match(pattern, text) is not None:
+                return self.PATTERN_TO_EXPRESSION[pattern]
+
+        return "Invalid expression."
 
 
 class Spotlight(Gtk.Window):
@@ -40,7 +74,7 @@ class Spotlight(Gtk.Window):
         self.connect("key-press-event", self.on_key_press)
         self._entry.connect("changed", self.on_entry_changed)
 
-        self.parser = Parser()
+        self._linker = Linker()
 
     def on_key_press(self, widget, event):
         ctrl = event.state & Gdk.ModifierType.CONTROL_MASK
@@ -58,7 +92,21 @@ class Spotlight(Gtk.Window):
         if self._entry.props.text == "":
             self.auto_shrink()
             return
-        answer = self.parser.parse(self.text_entry)
+
+        expression = self._linker(self.text_entry)
+        answer = ""
+
+        if expression == Expression.ARITHMETIC:
+            print(str(expression))
+            answer = parser.ArithmeticParser().parse(self.text_entry)
+        elif expression == Expression.DICTIONARY_LOOKUP:
+            print(str(expression))
+        elif expression == Expression.BANG_SEARCH:
+            print(str(expression))
+        else:
+            print("NOTHING GOT TRIGGERED")
+            answer = ""
+
         self._answer.set_text(answer)
 
     def style_entry(self) -> None:
