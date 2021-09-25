@@ -65,8 +65,8 @@ class AsyncParser(GObject.Object):
                 if self._query == query:
                     ev = GLib.Idle()
                     ev.set_callback(
-                        lambda *args: self.emit(
-                            "query_result", (query, result, exception)
+                        lambda *args, v=(query, result, exception): self.emit(
+                            "query_result", v
                         )
                     )
                     ev.attach(GLib.MainContext.default())
