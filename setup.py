@@ -29,5 +29,5 @@ setup(
         "py-dict-client",
         "lark",
     ],
-    entry_points={"console_scripts": ["spotlight=spotlight.cli:main"]},
+    entry_points={"console_scripts": ["spotlight=main:main"]},
 )

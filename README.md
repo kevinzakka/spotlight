@@ -7,6 +7,7 @@ A spotlight-equivalent for Linux.
 * [x] Arithmetic
 * [x] Definitions
 * [ ] Currency conversion (e.g. 1 BTC to USD)
+* [ ] Latex preview
 * [ ] [Bangs](https://help.duckduckgo.com/duckduckgo-help-pages/features/bangs/)
     * [ ] `!g`: google
     * [ ] `!a`: amazon
@@ -33,5 +34,9 @@ pip install -e .
 
 You can now run `spotlight` to launch the app.
 
-Once this is ready to launch, we'll want to have instructions for binding the
-entry point to a key stroke that way say `ctrl + space` can launch the app.
+Alternatively, you can create a custom keyboard shortcut. Just make sure you
+are using the correct environment python binary (use `which python`).
+
+* Name: `spotlight`
+* Command: `/home/kevin/anaconda3/envs/spotlight/bin/python /home/kevin/repos/spotlight/main.py`
+* Shortcut: `ctrl + space`
