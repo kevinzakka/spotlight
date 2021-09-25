@@ -1,5 +1,6 @@
 import gi
-gi.require_version('Gtk', '3.0')
+
+gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk
 from gi.repository import Gdk
 
@@ -7,6 +8,8 @@ from gi.repository import Gdk
 class Spotlight(Gtk.Window):
     """An open-source Spotlight for Linux."""
 
+    MIN_HEIGHT = 10
+    MIN_WIDTH = 10
     WIDTH = 400
 
     def __init__(self):
@@ -32,10 +35,11 @@ class Spotlight(Gtk.Window):
         self.set_keep_above(True)
         self.set_decorated(False)
 
-        self.connect("key-press-event", self.on_key_press_event)
         self.connect("delete-event", Gtk.main_quit)
+        self.connect("key-press-event", self.on_key_press)
+        self._entry.connect("changed", self.on_entry_changed)
 
-    def on_key_press_event(self, widget, event):
+    def on_key_press(self, widget, event):
         ctrl = event.state & Gdk.ModifierType.CONTROL_MASK
         if event.keyval == Gdk.KEY_Escape:
             if self._entry.props.text != "":
@@ -47,7 +51,13 @@ class Spotlight(Gtk.Window):
         else:
             return False
 
-    def style_entry(self):
+    def on_entry_changed(self, event) -> None:
+        if self._entry.props.text == "":
+            self.auto_shrink()
+            return
+        self._answer.set_text(self._entry.props.text)
+
+    def style_entry(self) -> None:
         css = Gtk.CssProvider()
         data = """
                 GtkEntry, entry {
@@ -63,21 +73,17 @@ class Spotlight(Gtk.Window):
         Gtk.StyleContext.add_provider_for_screen(screen, css, 600)
         self._entry.has_frame = False
 
-    def auto_shrink(self):
-        self.resize(10, 10)
+    def auto_shrink(self) -> None:
+        self.resize(width=self.MIN_WIDTH, height=self.MIN_HEIGHT)
 
-    def clear_text(self):
+    def clear_text(self) -> None:
+        """Clears the text in the entry and answer boxes."""
         self._answer.set_text("")
         self._entry.set_text("")
         self.auto_shrink()
 
-    def copy_to_clipboard(self):
+    def copy_to_clipboard(self) -> None:
+        """Copies the answer to the user clipboard."""
         clip = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
         text = self._answer.get_text()
         clip.set_text(text, len(text))
-
-
-if __name__ == "__main__":
-    spotlight = Spotlight()
-    spotlight.show_all()
-    Gtk.main()
