@@ -1,12 +1,13 @@
 import enum
 import re
+import subprocess
 from typing import Dict
 
 import gi
 
 gi.require_version("Gtk", "3.0")
 
-from gi.repository import Gdk, Gtk
+from gi.repository import GLib, Gdk, Gtk
 
 from spotlight import parser
 
@@ -54,8 +55,12 @@ class Spotlight(Gtk.Window):
     MIN_WIDTH = 10
     WIDTH = 400
 
-    def __init__(self):
+    def __init__(self, force_mutter_center=False):
         super().__init__()
+
+        self._mutter_centerer = _MutterCenterer() if force_mutter_center else None
+        if self._mutter_centerer:
+            self._mutter_centerer.center()
 
         container = Gtk.Box(
             orientation=Gtk.Orientation.VERTICAL,
@@ -79,10 +84,32 @@ class Spotlight(Gtk.Window):
 
         self.connect("delete-event", Gtk.main_quit)
         self.connect("key-press-event", self.on_key_press)
+        self.connect("show", self.on_show)
+        self.connect("hide", self.on_hide)
         self._entry.connect("changed", self.on_entry_changed)
 
         self._linker = Linker()
         self._parsers: Dict[Expression, parser.AsyncParser] = {}
+
+    def on_show(self, *args):
+        if self._mutter_centerer:
+            self._mutter_centerer.center()
+
+            # It's not clear if any signal / property in GTK
+            # indicates when Mutter is done showing the window,
+            # but waiting a small timeout seems to work.
+            def revert_center(*args):
+                self._mutter_centerer.revert()
+                self._mutter_centerer = None
+                return False
+
+            GLib.timeout_add(250, revert_center)
+
+    def on_hide(self, *args):
+        # Can be necessary if the user closes the window very fast
+        # after opening it.
+        if self._mutter_centerer:
+            self._mutter_centerer.revert()
 
     def on_key_press(self, widget, event):
         ctrl = event.state & Gdk.ModifierType.CONTROL_MASK
@@ -156,3 +183,36 @@ class Spotlight(Gtk.Window):
     @property
     def text_entry(self) -> str:
         return self._entry.props.text
+
+
+class _MutterCenterer:
+    def __init__(self):
+        self._init_state = _get_mutter_center()
+
+    def center(self):
+        if not self._init_state:
+            _set_mutter_center(True)
+
+    def revert(self):
+        _set_mutter_center(self._init_state)
+
+
+def _get_mutter_center() -> bool:
+    return (
+        subprocess.check_output(
+            ["gsettings", "get", "org.gnome.mutter", "center-new-windows"]
+        ).rstrip()
+        == "true"
+    )
+
+
+def _set_mutter_center(x: bool):
+    subprocess.check_call(
+        [
+            "gsettings",
+            "set",
+            "org.gnome.mutter",
+            "center-new-windows",
+            "true" if x else "false",
+        ]
+    )
