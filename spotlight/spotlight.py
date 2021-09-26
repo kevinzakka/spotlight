@@ -111,14 +111,12 @@ class Spotlight(Gtk.Window):
             def _handle_result(_, query_output_exc):
                 query, output, exc = query_output_exc
                 if query == self.text_entry and exc is None:
-                    self._answer.set_text(output)
-                    self.auto_shrink()
+                    self.set_text(output)
 
             parser.connect("query_result", _handle_result)
 
         answer = parser.run_query(self.text_entry)
-        if answer is not None:
-            self._answer.set_text(answer)
+        self.set_text(answer)
 
     def style_entry(self) -> None:
         css = Gtk.CssProvider()
@@ -143,6 +141,10 @@ class Spotlight(Gtk.Window):
         """Clears the text in the entry and answer boxes."""
         self._answer.set_text("")
         self._entry.set_text("")
+        self.auto_shrink()
+
+    def set_text(self, text: str) -> None:
+        self._answer.set_text(text)
         self.auto_shrink()
 
     def copy_to_clipboard(self) -> None:

@@ -9,30 +9,27 @@ class DictClientParser(AsyncParser):
     HOSTNAME = "dict.org"
     DATABASE = "wn"  # Should this be user changeable?
 
-    def __init__(self):
-        super().__init__()
-
     def run_query(self, query: str):
         super().run_query(query)
+
         return "Searching definition..."
 
     def parse_sync(self, string: str) -> str:
-        try:
-            client = DictionaryClient(self.HOSTNAME)
-
-            definition = client.define(string, db=self.DATABASE).content
-            if definition is None:
-                matches = client.match(string, db=self.DATABASE).content[self.DATABASE]
+        client = DictionaryClient(self.HOSTNAME)
+        definition = client.define(string, db=self.DATABASE).content
+        if not definition:
+            matches = client.match(string, db=self.DATABASE).content
+            if matches is None:
+                definition = None
+            else:
                 if len(matches) > 0:
-                    definition = client.define(matches[0], self.DATABASE).content
-        except:
-            return "Connection error..."
-
+                    definition = client.define(
+                        matches[self.DATABASE][0], self.DATABASE
+                    ).content
         if definition is None:
             answer = f"No match found for {string}."
         else:
             answer = self._format_answer(definition)
-
         client.disconnect()
         return answer
 

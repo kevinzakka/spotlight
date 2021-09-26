@@ -34,6 +34,7 @@ class AsyncParser(GObject.Object):
         with self._cond:
             self._query = query
             self._cond.notify_all()
+        return ""
 
     def _run(self):
         while True:
