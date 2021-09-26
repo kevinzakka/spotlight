@@ -20,7 +20,7 @@ GRAMMAR = """
     ?product: pow
         | product "*" pow  -> mul
         | product "/" pow  -> div
-    
+
     ?pow: atom
         | pow "**" atom  -> pow
         | pow "^" atom   -> pow
@@ -91,5 +91,7 @@ class ArithmeticParser(AsyncParser):
     def parse_sync(self, string: str) -> str:
         try:
             return str(self.parser(string))
-        except:
+        except ZeroDivisionError as e:
+            return str(e)
+        except Exception:
             return ""

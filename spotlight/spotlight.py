@@ -7,7 +7,7 @@ import gi
 
 gi.require_version("Gtk", "3.0")
 
-from gi.repository import GLib, Gdk, Gtk
+from gi.repository import Gdk, GLib, Gtk
 
 from spotlight import parser
 
@@ -22,15 +22,16 @@ class Expression(enum.Enum):
     SPOTIFY_SEARCH = "spotify_search"
     ARXIV_SEARCH = "arxiv_search"
     GOOGLE_SCHOLAR_SEARCH = "google_scholar_search"
+    UNRECOGNIZED = "unrecognized"
 
 
 class Linker:
     """The linker reads raw user text and links it to an Expression."""
 
     PATTERN_TO_EXPRESSION: Dict[str, Expression] = {
-        "^[A-Za-z ]+$": Expression.DICTIONARY_LOOKUP,
-        "[0-9a-z()+\-\*/]": Expression.ARITHMETIC,
-        "^[!]": Expression.BANG_SEARCH,
+        r"^[A-Za-z ]+$": Expression.DICTIONARY_LOOKUP,
+        r"[0-9a-z()+\-\*/]": Expression.ARITHMETIC,
+        r"^[!]": Expression.BANG_SEARCH,
     }
 
     def __call__(self, text: str) -> Expression:
@@ -39,7 +40,7 @@ class Linker:
             if re.match(pattern, text) is not None:
                 return self.PATTERN_TO_EXPRESSION[pattern]
 
-        return "Invalid expression."
+        return Expression.UNRECOGNIZED
 
 
 EXPRESSION_TO_PARSER = {

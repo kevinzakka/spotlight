@@ -1,4 +1,3 @@
-import abc
 import threading
 from typing import Optional, Tuple
 
@@ -9,7 +8,10 @@ from gi.repository import GLib, GObject
 
 
 class AsyncParser(GObject.Object):
-    """Base asynchronous parser abstraction."""
+    """Base asynchronous parser abstraction.
+
+    Subclasses should implement the `parse_sync` method.
+    """
 
     def __init__(self):
         super().__init__()
@@ -18,6 +20,10 @@ class AsyncParser(GObject.Object):
 
         thread = threading.Thread(target=self._run, args=(), daemon=True)
         thread.start()
+
+    def parse_sync(self, string: str) -> str:
+        """Parse a string."""
+        raise NotImplementedError
 
     @GObject.Signal(
         flags=GObject.SignalFlags.RUN_LAST,
@@ -59,7 +65,3 @@ class AsyncParser(GObject.Object):
                     )
                     ev.attach(GLib.MainContext.default())
                     self._query = None
-
-    @abc.abstractmethod
-    def parse_sync(self, string: str) -> str:
-        """Parse a string."""
