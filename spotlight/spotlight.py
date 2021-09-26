@@ -100,11 +100,14 @@ class Spotlight(Gtk.Window):
             # but waiting a small timeout seems to work.
             def revert_center(*args):
                 self._mutter_centerer.revert()
+                self._mutter_centerer = None
                 return False
 
             GLib.timeout_add(250, revert_center)
 
     def on_hide(self, *args):
+        # Can be necessary if the user closes the window very fast
+        # after opening it.
         if self._mutter_centerer:
             self._mutter_centerer.revert()
 
