@@ -1,6 +1,6 @@
 # spotlight
 
-A spotlight-equivalent for Linux.
+An open-source Spotlight for Linux, for researchers.
 
 ## Todos
 
